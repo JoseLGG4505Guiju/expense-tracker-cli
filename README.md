@@ -1,4 +1,4 @@
-# expense-tracker-cli
+    # expense-tracker-cli
 
 Gestor de gastos personales — pequeña CLI para registrar ingresos y gastos, obtener resúmenes y generar gráficos.
 
@@ -60,6 +60,29 @@ Archivos importantes
 - `data.json`: persistencia local (no subir datos reales a GitHub).
 - `data.sample.json`: ejemplo con datos de prueba.
 - `requirements.txt`: dependencias del proyecto.
+
+Arquitectura y módulos
+
+- `storage.py`: lectura/escritura atómica de `data.json`. Debe exportar `load_data(path=None)` y `save_data(data, path=None)`; aceptar ruta opcional facilita pruebas.
+- `logic.py` (opcional): funciones de negocio como `add_record`, `list_records`, `summary_for_month`.
+- `app.py`: interfaz CLI; valida entradas y llama a `logic`/`storage`.
+
+Por qué esta separación
+
+- Facilita pruebas unitarias: puedes pasar un fichero temporal a `storage`.
+- Mantiene `app.py` limpio: solo parseo de argumentos y mensajes al usuario.
+- Mejora mantenimiento y legibilidad.
+
+Ejemplo rápido de flujo interno
+
+1. `app.py` parsea `add --amount -12.5 --category comida --date 2026-03-18`.
+2. Valida los campos y construye un dict `record`.
+3. Llama a `load_data()` desde `storage.py`, añade `record` y llama `save_data()`.
+4. `storage.py` escribe de forma atómica en `data.json`.
+
+Tests
+
+- Recomiendo `pytest`. Añade tests para `storage` (load/save roundtrip), `add_record` (asigna id) y `summary` (suma por categoría).
 
 Buenas prácticas antes de subir a GitHub
 
