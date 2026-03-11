@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "date": "2026-03-18",
+    "amount": -12.5,
+    "category": "comida",
+    "note": "Café"
+  },
+  {
+    "id": 2,
+    "date": "2026-03-01",
+    "amount": 1200,
+    "category": "sueldo",
+    "note": "Nómina"
+  }
+]
