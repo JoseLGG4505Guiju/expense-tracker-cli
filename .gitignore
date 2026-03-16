@@ -1,8 +1,24 @@
+# Entorno virtual
+.venv/
+venv/
+
+# Archivos de datos locales
+data.json
+
+# Carpeta de pruebas temporales
+tmp/
+
+# Cachés y compilados
 __pycache__/
 *.pyc
-.venv/
-env/
-ENV/
-data.json
-.DS_Store
-/.vscode/
+*.pyo
+
+# Herramientas y editores
+.vscode/
+.idea/
+
+# pytest
+.pytest_cache/
+
+# Archivos de entorno
+.env
