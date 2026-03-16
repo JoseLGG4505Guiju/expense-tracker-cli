@@ -1,31 +1,65 @@
+
 import json
+import os
+import tempfile
 from pathlib import Path
 
 DATA_FILE = Path("data.json")
 
-def load_data():
-    """_summary_
-    Lo que hace load_data es comprobar que el archivo de datos existe, si es así, lo abre y carga su contenido como un diccionario de Python utilizando json.load(). Si el archivo no existe, devuelve un diccionario con una clave "expenses" que contiene una lista vacía.
 
-    Returns:
-        dict: Un diccionario que contiene los datos cargados desde el archivo JSON o una estructura vacía si el archivo no existe.
+def load_data(path=None):
+    """Carga datos JSON desde `path` o `DATA_FILE` si no se especifica.
 
+    Devuelve un dict con clave "expenses" como lista vacía si el fichero no existe.
     """
-    if DATA_FILE.exists():
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f) # Carga los datos desde el archivo JSON y los devuelve como un diccionario de Python
-    return {"expenses": []} # Si el archivo no existe, devuelve un diccionario con una lista vacía de gastos
+    target = Path(path) if path is not None else DATA_FILE
+    if target.exists():
+        with open(target, "r", encoding="utf-8") as f:
+            raw = json.load(f)
+            # Normalizar formatos: aceptar lista directa o dict {"expenses": [...]}
+            if isinstance(raw, list):
+                return {"expenses": raw}
+            if isinstance(raw, dict) and isinstance(raw.get("expenses"), list):
+                return raw
+            if isinstance(raw, dict):
+                # Diccionario no estándar: envolver como un único registro
+                return {"expenses": [raw]}
+            # Fallback
+            return {"expenses": []}
+    return {"expenses": []}
 
-def save_data(data):
-    """_summary_
-    Comprueba si el archivo de datos existe y, si es así, guarda el objeto de datos proporcionado en el archivo JSON utilizando json.dump(). La función devuelve el mismo objeto de datos que se ha guardado.
-    Args:
-        data (objeto): El objeto de datos que se desea guardar en el archivo JSON.
-    Returns:
-        objeto: El mismo objeto de datos que se ha guardado en el archivo JSON.
+
+def save_data(data, path=None):
+    """Guarda `data` en `path` (o `DATA_FILE`) de forma atómica.
+
+    Escribe en un fichero temporal en el mismo directorio, forza el volcado a disco
+    y luego reemplaza el fichero objetivo con `Path.replace()`.
     """
-    with open(DATA_FILE, "w", encoding="utf-8" ) as f:
-            json.dump(data, f, indent=4) # Guarda los datos en el archivo JSON con una indentación de 4 espacios para mejorar la legibilidad
+    target = Path(path) if path is not None else DATA_FILE
+    # Asegurar que existe el directorio destino
+    if target.parent:
+        target.parent.mkdir(parents=True, exist_ok=True)
+
+    # Crear un temporal en el mismo directorio para permitir un replace atómico
+    dirpath = str(target.parent) if target.parent else None
+    # Normalizar data aceptando lista o dict
+    if isinstance(data, list):
+        data_to_write = {"expenses": data}
+    elif isinstance(data, dict) and isinstance(data.get("expenses"), list):
+        data_to_write = data
+    else:
+        # envolver cualquier otro objeto como un único registro
+        data_to_write = {"expenses": [data]}
+
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", delete=False, dir=dirpath) as tf:
+        json.dump(data_to_write, tf, indent=4, ensure_ascii=False)
+        tf.flush()
+        os.fsync(tf.fileno())
+        temp_name = tf.name
+
+    # Reemplazo atómico del fichero objetivo
+    Path(temp_name).replace(target)
     return data
+
 
 
