@@ -11,6 +11,7 @@ def load_data(path=None):
     """Carga datos JSON desde `path` o `DATA_FILE` si no se especifica.
 
     Devuelve un dict con clave "expenses" como lista vacía si el fichero no existe.
+    
     """
     target = Path(path) if path is not None else DATA_FILE
     if target.exists():
